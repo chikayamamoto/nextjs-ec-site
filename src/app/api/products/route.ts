@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import path from 'path';
+import { writeFile } from 'fs/promises';
 import { executeQuery } from '@/lib/db'; // DB共通モジュール
 import { type ProductData } from '@/types/product';
 // 商品データの型定義
@@ -85,4 +87,51 @@ export async function GET(request: NextRequest) {
         console.error('商品取得エラー：', err);
         return NextResponse.json({ message: 'サーバーエラーが発生しました。' }, { status: 500 });
     }
+}
+// 商品データを新規登録
+export async function POST(request: NextRequest) {
+  try {
+    // 画像ファイルを含むフォームデータを取得
+    const formData = await request.formData();
+    const name = formData.get('name')?.toString().trim() || '';
+    const file = formData.get('imageFile') as File;
+    const description = formData.get('description')?.toString().trim() || '商品の説明がありません。';
+    const price = Number(formData.get('price'));
+    const stock = Number(formData.get('stock'));
+    const isFeatured = formData.get('isFeatured') === 'on';
+
+    // 入力値のバリデーション
+    if (!name?.trim() || !file || isNaN(price) || isNaN(stock)) {
+      return NextResponse.json({ message: '必須項目が不足しています。' }, { status: 400 });
+    }
+
+    // 拡張子を安全に取得
+    const ext = file.name.split('.').pop();
+    if (!ext || !['jpg', 'jpeg', 'png'].includes(ext.toLowerCase())) {
+      return NextResponse.json({ message: '対応していないファイル形式です。' }, { status: 400 });
+    }
+
+    // 重複しないファイル名を生成
+    const timestamp = Date.now(); // 現在の日付
+    const random = Math.floor(Math.random() * 10000); // 0～9999の乱数
+    const fileName = `${timestamp}_${random}.${ext}`; // ファイル名を構築
+
+    // 保存先のファイルパスを構築
+    const filePath = path.join(process.cwd(), 'public/uploads', fileName);
+
+    // ファイルを保存
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await writeFile(filePath, buffer);
+
+    // 商品情報をproductsテーブルに追加
+    await executeQuery(`
+      INSERT INTO products (name, image_url, description, price, stock, is_featured)
+      VALUES (?, ?, ?, ?, ?, ?);
+    `, [name, fileName, description, price, stock, isFeatured ? 1 : 0]);
+
+    return NextResponse.json({ message: '商品を登録しました。' }, { status: 201 });
+  } catch (err) {
+    console.error('商品登録エラー：', err);
+    return NextResponse.json({ message: 'サーバーエラーが発生しました。' }, { status: 500 });
+  }
 }

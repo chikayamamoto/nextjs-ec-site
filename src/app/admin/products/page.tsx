@@ -44,8 +44,19 @@ export default async function AdminProductsPage({
 
   // テーブルの共通スタイル
   const tableStyle = 'px-5 py-3 border-b border-gray-300';
-
+  // クエリパラメータに応じたメッセージを設定
+  const message =
+    sp?.registered ? '商品を登録しました。' :
+    sp?.edited ? '商品を編集しました。' :
+    sp?.deleted ? '商品を削除しました。' :
+    null;
   return (
+        <>
+      {message && (
+        <div className="w-full bg-green-100 text-green-800 p-3 text-center shadow-md flex items-center justify-center">
+          {message}
+        </div>
+      )}
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-center">商品一覧</h1>
       <div className="flex justify-end mb-4">
@@ -111,5 +122,6 @@ export default async function AdminProductsPage({
         />}
       </section>
     </div>
+     </>
   );
 }
