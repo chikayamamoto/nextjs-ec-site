@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { type ProductData } from '@/types/product';
 import Pagination from '@/components/Pagination'; // ページネーションコンポーネント
-
+import DeleteLink from '@/app/admin/products/DeleteLink';
 // 商品データの型定義
 type Product = Pick<ProductData, 'id' | 'name' | 'price' | 'stock' | 'updated_at'>;
 
@@ -101,11 +101,7 @@ export default async function AdminProductsPage({
                     >
                       編集
                     </Link>
-                    <button
-                      className="text-red-600 hover:text-red-700 cursor-pointer"
-                    >
-                      削除
-                    </button>
+                      <DeleteLink id={product.id} name={product.name} />
                   </td>
                 </tr>
               ))

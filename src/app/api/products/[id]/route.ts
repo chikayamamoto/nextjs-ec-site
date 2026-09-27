@@ -128,3 +128,53 @@ export async function PUT(
     return NextResponse.json({ message: 'サーバーエラーが発生しました。' }, { status: 500 });
   }
 }
+// 指定IDの商品データを削除
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  // URLのパラメータからIDを取得
+  const { id } = await context.params;
+
+  // IDを数値に変換
+  const productId = parseInt(id, 10);
+
+  try {
+    // 既存の商品データを取得（存在確認）
+    const existing = await executeQuery<Product>(
+      'SELECT * FROM products WHERE id = ?;',
+      [productId]
+    );
+    if (existing.length === 0) {
+      return NextResponse.json(
+        { message: '商品が見つかりませんでした。' },
+        { status: 404 }
+      );
+    }
+    const currentProduct = existing[0]; // 現状の商品データを取得
+
+    // 画像ファイルがあれば削除
+    if (currentProduct.image_url) {
+      const filePath = path.join(process.cwd(), 'public/uploads', currentProduct.image_url);
+      try { // ファイルを削除
+        await rm(filePath);
+      } catch (err) {
+        console.error('画像ファイル削除エラー：', err);
+      }
+    }
+
+    // DBから商品を削除
+    await executeQuery(
+      'DELETE FROM products WHERE id = ?;',
+      [productId]
+    );
+
+    return NextResponse.json({ message: '商品を削除しました。' }, { status: 200 });
+  } catch (err) {
+    console.error('商品削除エラー：', err);
+    return NextResponse.json(
+      { message: 'サーバーエラーが発生しました。' },
+      { status: 500 }
+    );
+  }
+}
