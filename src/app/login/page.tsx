@@ -32,16 +32,18 @@ export default function LoginPage() {
                 body: JSON.stringify({ email, password }),
                 headers: { 'Content-Type': 'application/json' }
             });
+                  const data = await res.json();
 
-            if (res.ok) { // ログイン成功時はトップページへ遷移
-       if (redirect) { // 保護ページからのリダイレクト
+      if (res.ok) {
+        if (data.isAdmin) { // 管理者のログイン時
+          router.push('/admin/products');
+        } else if (redirect) { // 保護ページからのリダイレクト
           router.replace(redirect);
         } else { // 通常のログイン時
           router.push('/?logged-in=1');
         }
                 router.refresh(); // ヘッダー更新のためWebページを再読み込み
             } else { // ログイン失敗時はエラー情報を表示
-                const data = await res.json();
                 setErrorMessage(data.message || 'ログインに失敗しました。');
             }
         } catch {

@@ -43,7 +43,10 @@ export async function POST(request: NextRequest) {
       isAdmin: user.is_admin
     });
 
-    const response = NextResponse.json({ message: 'ログイン成功' });
+    const response = NextResponse.json({
+      message: 'ログイン成功',
+      isAdmin: user.is_admin
+    });
     // レスポンスのクッキー設定
     response.cookies.set({
       name: JWT_COOKIE,
