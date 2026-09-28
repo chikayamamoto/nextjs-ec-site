@@ -33,6 +33,7 @@ export default function Home() {
     searchParams.get('registered') ? '会員登録が完了しました。' :
     searchParams.get('logged-in') ? 'ログインしました。' :
     searchParams.get('logged-out') ? 'ログアウトしました。' :
+    searchParams.get('submitted') ? 'お問い合わせを送信しました。ご返信までしばらくお待ちください。' :
     null;
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">

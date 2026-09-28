@@ -42,13 +42,15 @@ export default function ProductCard({
       ${className}
     `}>
             <Link href={`/products/${id}`}>
-                <Image
-                    src={finalImageUrl}
-                    alt={title || '商品画像'}
-                    width={imageSize}
-                    height={imageSize}
-                    className="w-full object-contain aspect-square"
-                />
+                <div className="w-[300px] h-[300px] overflow-hidden flex justify-center items-center mx-auto">
+                    <Image
+                        src={finalImageUrl}
+                        alt={title || '商品画像'}
+                        width={300}
+                        height={300}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
             </Link>
             <div className="flex flex-col">
                 <h3 className="text-sm font-semibold leading-tight mb-1">{title}</h3>
