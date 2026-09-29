@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useCart } from '@/hooks/useCart';
 import { type AuthUser } from '@/lib/auth';
 
 // ヘッダーコンポーネントに渡すデータ（props）の型定義
@@ -18,6 +19,11 @@ export default function Header({ user }: HeaderProps) {
     const closeMenu = () => setIsMenuOpen(false);
     // メニューの開閉状態を反転させる関数
     const toggleMenu = () => setIsMenuOpen(prev => !prev);
+
+    // カート内商品の総数を取得
+    const { totalQuantity } = useCart();
+    // 表示用のカート数量（初期値は0）
+    const [displayQuantity, setDisplayQuantity] = useState(0);
 
     const searchParams = useSearchParams();
     const perPage = searchParams.get('perPage') || '16';
@@ -37,6 +43,10 @@ export default function Header({ user }: HeaderProps) {
         // クリーンアップ処理（イベントリスナーを削除）
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
+    // カート内商品の数量変更時に表示を更新
+    useEffect(() => {
+        setDisplayQuantity(totalQuantity);
+    }, [totalQuantity]);
 
     // メニュー項目の共通スタイル
     const menuItemStyle = 'block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
@@ -74,8 +84,13 @@ export default function Header({ user }: HeaderProps) {
                     <Link href="/account/favorites">
                         <Image src="/icons/heart-icon.svg" alt="Favorites" width={24} height={24} className="w-6 h-6" />
                     </Link>
-                    <Link href="/cart">
+                    <Link href="/cart" className="relative">
                         <Image src="/icons/cart-icon.svg" alt="Cart" width={24} height={24} className="w-6 h-6" />
+                        {displayQuantity > 0 && (
+                            <span className="absolute -top-2 -right-2 w-[20px] h-[20px] bg-yellow-500 text-black flex items-center justify-center rounded-full ring-2 ring-white text-xs font-semibold">
+                                {displayQuantity > 9 ? '9+' : displayQuantity}
+                            </span>
+                        )}
                     </Link>
                     <div className="relative" ref={menuRef}>
                         <button onClick={toggleMenu} className="cursor-pointer" >

@@ -4,6 +4,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { type ProductData } from '@/types/product';
 import { isLoggedIn } from '@/lib/auth';
+import CartControls from '@/app/products/[id]/CartControls';
+
 // 商品データの型定義
 type Product = ProductData; // 基本型から変更なし
 
@@ -11,7 +13,7 @@ type Product = ProductData; // 基本型から変更なし
 interface ProductDetailPageProps {
   params: Promise<{
     id: string; // URLから取得する商品ID
- }>
+  }>
 }
 
 // 商品データを取得
@@ -61,12 +63,6 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
     stockStyle = 'text-orange-500';
   }
 
-  // 数量セレクトボックスのオプションを生成
-  const quantityOptions = [];
-  for (let i = 1; i <= Math.min(stock, 10); i++) { // 最大10個まで
-    quantityOptions.push(<option key={i} value={i}>{i}</option>);
-  }
-
   // 画像の指定がなければダミー画像を表示
   const finalImageUrl = product.image_url
     ? `/uploads/${product.image_url}`
@@ -92,26 +88,16 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
           {/* 一般ユーザー向け項目 */}
           <div className="space-y-6 mt-8">
             {stock > 0 && (
-              <div className="flex items-end gap-4">
-                <div className="flex flex-col">
-                  <label htmlFor="quantity" className="block text-sm text-gray-700">
-                    数量
-                  </label>
-                  <select id="quantity" name="quantity" defaultValue={1}
-                    className="border border-gray-300 rounded-md px-4 py-2 w-24 focus:ring-2 focus:ring-indigo-500"
-                  >
-                    {quantityOptions}
-                  </select>
-                </div>
-                <button className="bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-sm">
-                  カートに追加
-                </button>
-                {loggedIn && (
-                  <button className="border border-indigo-500 text-indigo-500 py-2 px-4 rounded-sm hover:bg-indigo-50">
-                    購入手続きへ
-                  </button>
-                 )}
-              </div>
+              <CartControls
+                cartItem={{
+                  id: product.id.toString(),
+                  title: product.name,
+                  price: product.price,
+                  imageUrl: product.image_url ?? '',
+                }}
+                stock={stock}
+                loggedIn={loggedIn}
+              />
             )}
             {loggedIn && (
               <button className="text-teal-800 hover:underline">&#9825; お気に入り追加</button>
