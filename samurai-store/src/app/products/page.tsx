@@ -77,7 +77,7 @@ export default async function ProductsPage({
                     {productsPageData.pagination.totalPages}&nbsp;ページ中&nbsp;
                     {productsPageData.pagination.currentPage}&nbsp;ページ目を表示）
                 </p>
-                <Sort sort={sort} perPage={perPage} />
+                <Sort sort={sort} perPage={perPage} keyword={keyword} />
             </section>
 
             <section className="mb-8">

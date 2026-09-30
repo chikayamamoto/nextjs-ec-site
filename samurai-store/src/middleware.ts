@@ -17,6 +17,7 @@ const authPages = [
 const adminPages = [
   '/admin/products', // 管理者用の商品一覧ページ
   '/admin/products/register', // 管理者用の商品登録ページ
+  '/admin/inquiries' // 管理者用のお問い合わせ一覧ページ
 ];
 
 // リクエスト受信時に実行されるミドルウェア
@@ -57,6 +58,6 @@ export async function middleware(request: NextRequest) {
 // ログインページへリダイレクト
 function redirectToLogin(request: NextRequest) {
   const loginUrl = new URL('/login', request.url);
-  loginUrl.searchParams.set('redirect', request.nextUrl.pathname);
+  loginUrl.searchParams.set('redirect', request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(loginUrl);
 }
