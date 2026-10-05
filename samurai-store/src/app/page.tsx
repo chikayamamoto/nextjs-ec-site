@@ -31,10 +31,10 @@ export default function Home() {
   const searchParams = useSearchParams();
   const message =
     searchParams.get('registered') ? '会員登録が完了しました。' :
-    searchParams.get('logged-in') ? 'ログインしました。' :
-    searchParams.get('logged-out') ? 'ログアウトしました。' :
-    searchParams.get('submitted') ? 'お問い合わせを送信しました。ご返信までしばらくお待ちください。' :
-    null;
+      searchParams.get('logged-in') ? 'ログインしました。' :
+        searchParams.get('logged-out') ? 'ログアウトしました。' :
+          searchParams.get('submitted') ? 'お問い合わせを送信しました。ご返信までしばらくお待ちください。' :
+            null;
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
       {message && (
@@ -82,6 +82,8 @@ export default function Home() {
                   title={item.name}
                   price={item.price}
                   imageUrl={item.image_url ?? undefined}
+                  rating={item.review_avg}
+                  reviewCount={item.review_count}
                   imageSize={400}
                 />
               ))}
@@ -104,6 +106,8 @@ export default function Home() {
                   title={item.name}
                   price={item.price}
                   imageUrl={item.image_url ?? undefined}
+                  rating={item.review_avg}
+                  reviewCount={item.review_count}
                   showCartButton
                 />
               ))}

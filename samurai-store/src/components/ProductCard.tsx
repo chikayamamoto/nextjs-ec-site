@@ -46,6 +46,14 @@ export default function ProductCard({
     const finalImageUrl = imageUrl
         ? `/uploads/${imageUrl}`
         : '/images/no-image.jpg';
+    // レビューの星表示を決定
+    const displayStars = (avgRating: number) => {
+        const rating = Math.round(avgRating); // 四捨五入
+        const filledStars = '★'.repeat(rating); // 評価分塗りつぶす
+        const emptyStars = '☆'.repeat(5 - rating); // 残りは空の星
+        return `${filledStars}${emptyStars}`;
+    };
+
 
     return (
         <div className={`
@@ -66,7 +74,14 @@ export default function ProductCard({
             <div className="flex flex-col">
                 <h3 className="text-sm font-semibold leading-tight mb-1">{title}</h3>
                 {rating !== undefined && reviewCount !== undefined && (
-                    <p>☆☆☆☆☆（-件）</p>
+                    reviewCount > 0 ? (
+                        <p className="flex items-center text-sm mb-1">
+                            <span className="text-yellow-500 mr-1">{displayStars(rating || 0)}</span>
+                            <span className="text-gray-600">（{reviewCount}件）</span>
+                        </p>
+                    ) : (
+                        <p className="text-xs text-gray-400 mt-1">まだレビューがありません</p>
+                    )
                 )}
                 <div className="flex justify-between items-center w-full mt-2">
                     <p className="text-lg font-bold">¥{price.toLocaleString()}</p>

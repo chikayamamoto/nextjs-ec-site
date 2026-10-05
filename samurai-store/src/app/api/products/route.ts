@@ -8,85 +8,96 @@ type Product = Omit<ProductData, 'description'>;
 // 全商品のデータを取得
 
 export async function GET(request: NextRequest) {
-    try {
-        const { searchParams } = new URL(request.url);
+  try {
+    const { searchParams } = new URL(request.url);
 
-        // クエリパラメータからpageとperPageを取得
-        let page = Number(searchParams.get('page')) || 1;
-        let perPage = Number(searchParams.get('perPage')) || 16;
+    // クエリパラメータからpageとperPageを取得
+    let page = Number(searchParams.get('page')) || 1;
+    let perPage = Number(searchParams.get('perPage')) || 16;
 
-        // 最小値・最大値を超えている場合は補正
-        page = Math.max(1, Math.min(page, 1000)); // ページ番号は1～1000
-        perPage = Math.max(1, Math.min(perPage, 100)); // 1ページ件数は1～100
+    // 最小値・最大値を超えている場合は補正
+    page = Math.max(1, Math.min(page, 1000)); // ページ番号は1～1000
+    perPage = Math.max(1, Math.min(perPage, 100)); // 1ページ件数は1～100
 
-        // オフセット（スキップする件数）を計算
-        const offset = (page - 1) * perPage;
-        // クエリパラメータから並べ替え条件を取得
-        const sort = searchParams.get('sort') ?? 'new';
-        // ORDER BY句に指定する条件を決定
-        let order = '';
-        switch (sort) {
-            case 'priceAsc': // 価格が安い順
-                order = 'ORDER BY price ASC';
-                break;
-            case 'new': // 新着順
-            default:
-                order = 'ORDER BY created_at DESC';
-                break;
-        }
-        // クエリパラメータから検索キーワードを取得
-        const keyword = searchParams.get('keyword')?.trim() || '';
-        console.log("DEBUG KEYWORD:", keyword);
+    // オフセット（スキップする件数）を計算
+    const offset = (page - 1) * perPage;
+    // クエリパラメータから並べ替え条件を取得
+    const sort = searchParams.get('sort') ?? 'new';
+    // ORDER BY句に指定する条件を決定
+    let order = '';
+    switch (sort) {
+      case 'priceAsc': // 価格が安い順
+        order = 'ORDER BY p.price ASC';
+        break;
+      case 'new': // 新着順
+      default:
+        order = 'ORDER BY p.created_at DESC';
+        break;
+    }
+    // クエリパラメータから検索キーワードを取得
+    const keyword = searchParams.get('keyword')?.trim() || '';
+    console.log("DEBUG KEYWORD:", keyword);
 
-        // WHERE句のベースを構築
-        const where = keyword
-            ? 'WHERE (name LIKE ? OR description LIKE ?)'
-            : ''; // WHERE句を付加せず全データを取得
+    // WHERE句のベースを構築
+    const where = keyword
+      ? 'WHERE (p.name LIKE ? OR p.description LIKE ?)'
+      : ''; // WHERE句を付加せず全データを取得
 
-        // WHERE句に指定するパラメータを構築
-        const whereParams = keyword
-            ? [`%${keyword}%`, `%${keyword}%`]
-            : [];
+    // WHERE句に指定するパラメータを構築
+    const whereParams = keyword
+      ? [`%${keyword}%`, `%${keyword}%`]
+      : [];
 
-        // SQL文に埋め込むパラメータを構築
-        const productsParams = [...whereParams, perPage, offset];
-        const countParams = [...whereParams];
+    // SQL文に埋め込むパラメータを構築
+    const productsParams = [...whereParams, perPage, offset];
+    const countParams = [...whereParams];
 
-        // 2つのデータベース操作を並行処理で実施
-        const [products, totalItemsResult] = await Promise.all([
-            // LIMITとOFFSETを使い、現在のページに表示する商品データだけを取得
-            executeQuery<Product[]>(`
-        SELECT *
-        FROM products
+    // 2つのデータベース操作を並行処理で実施
+    const [products, totalItemsResult] = await Promise.all([
+      // LIMITとOFFSETを使い、現在のページに表示する商品データだけを取得
+      executeQuery<Product[]>(`
+        SELECT
+          p.id,
+          p.name,
+          p.price,
+          p.stock,
+          p.image_url,
+          p.updated_at,
+          COALESCE(ROUND(AVG(r.score), 1), 0) AS review_avg,
+          COALESCE(COUNT(r.id), 0) AS review_count
+        FROM products AS p
+        LEFT JOIN reviews AS r ON p.id = r.product_id
         ${where}
+        GROUP BY
+          p.id, p.name, p.price, p.stock, p.image_url, p.updated_at
         ${order}
         LIMIT ?
         OFFSET ?
         ;`, productsParams
-            ),
-            // 商品データの全件数を取得
-            executeQuery<{ count: number }>(`
+      ),
+      // 商品データの全件数を取得
+      executeQuery<{ count: number }>(`
         SELECT COUNT(*) AS count
-        FROM products
+        FROM products AS p
         ${where}
       ;`, countParams)
-        ]);
+    ]);
 
-        // 全件数を扱いやすい変数に取得
-        const totalItems = totalItemsResult[0].count;
+    // 全件数を扱いやすい変数に取得
+    const totalItems = totalItemsResult[0].count;
 
-        // 総ページ数を計算
-        const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
+    // 総ページ数を計算
+    const totalPages = Math.max(1, Math.ceil(totalItems / perPage));
 
-        // 取得した商品データとページネーション情報を返す
-        return NextResponse.json({
-            products, // 現在のページの商品データ
-            pagination: { currentPage: page, perPage, totalItems, totalPages },
-        });
-    } catch (err) {
-        console.error('商品取得エラー：', err);
-        return NextResponse.json({ message: 'サーバーエラーが発生しました。' }, { status: 500 });
-    }
+    // 取得した商品データとページネーション情報を返す
+    return NextResponse.json({
+      products, // 現在のページの商品データ
+      pagination: { currentPage: page, perPage, totalItems, totalPages },
+    });
+  } catch (err) {
+    console.error('商品取得エラー：', err);
+    return NextResponse.json({ message: 'サーバーエラーが発生しました。' }, { status: 500 });
+  }
 }
 // 商品データを新規登録
 export async function POST(request: NextRequest) {
