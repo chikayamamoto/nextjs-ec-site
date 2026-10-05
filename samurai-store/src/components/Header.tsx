@@ -61,10 +61,16 @@ export default function Header({ user }: HeaderProps) {
                 </div>
 
                 <nav className="flex-grow text-center mt-8">
-                    <ul className="flex justify-center space-x-8 list-none">
-                        <li className="border-r border-gray-300 pr-8"><Link href="/">ホーム</Link></li>
-                        <li className="border-r border-gray-300 pr-8"><Link href="/products">商品一覧</Link></li>
-                        <li><Link href="/contact">お問い合わせ</Link></li>
+                    <ul className="inline-flex divide-x divide-gray-300 list-none">
+                        <li className="border-r border-gray-300">
+                            <Link href="/" className="block w-[120px] py-3 hover:bg-gray-200 rounded-sm">ホーム</Link>
+                        </li>
+                        <li className="border-r border-gray-300">
+                            <Link href="/products" className="block w-[120px] py-3 hover:bg-gray-200 rounded-sm">商品一覧</Link>
+                        </li>
+                        <li>
+                            <Link href="/contact" className="block w-[120px] py-3 hover:bg-gray-200 rounded-sm">お問い合わせ</Link>
+                        </li>
                     </ul>
                 </nav>
 
