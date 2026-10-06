@@ -7,6 +7,9 @@ import { type ReviewsResponse } from '@/types/review';
 import { isLoggedIn } from '@/lib/auth';
 import CartControls from '@/app/products/[id]/CartControls';
 import ReviewControls from '@/app/products/[id]/ReviewControls';
+import FavoriteControls from '@/app/products/[id]/FavoriteControls';
+import { AUTH_TOKEN } from '@/lib/auth';
+import { cookies } from 'next/headers';
 // 商品データの型定義
 type Product = ProductData; // 基本型から変更なし
 
@@ -53,17 +56,38 @@ function displayStars(avgRating: number) {
   const emptyStars = '☆'.repeat(5 - rating); // 残りは空の星
   return `${filledStars}${emptyStars}`;
 }
+async function getFavoriteStatus(productId: string): Promise<boolean> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(AUTH_TOKEN)?.value;
+
+  const headers: HeadersInit = token
+    ? { Cookie: `${AUTH_TOKEN}=${token}` }
+    : {};
+
+  const res = await fetch(`${process.env.BASE_URL}/api/favorites/${productId}`, {
+    cache: 'no-store',
+    headers: headers,
+  });
+
+  if (!res.ok) return false;
+
+  const data = await res.json();
+  return data.exists === true;
+}
+
 
 // 商品詳細ページ
 export default async function ProductDetailPage(props: ProductDetailPageProps) {
   const resolvedParams = await props.params; // 非同期で取得されるためawaitが必要
   const productId = resolvedParams.id; // URLパラメータから商品IDを取得
 
-  // 商品データとレビューデータを並行して取得
-  const [product, reviewsResponse] = await Promise.all([
-    getProduct(productId),
-    getReviews(productId),
-  ]);
+  // 商品データとレビューデータ、お気に入り状態を並行して取得
+const [product, reviewsResponse, isFavorite] = await Promise.all([
+  getProduct(productId),
+  getReviews(productId),
+  getFavoriteStatus(productId),
+]);
+
   // レビュー表示に必要な情報を取得
   const reviews = Array.isArray(reviewsResponse) ? [] : reviewsResponse.reviews;
   const rating = Array.isArray(reviewsResponse) ? 0 : reviewsResponse.review_avg;
@@ -133,7 +157,7 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
               />
             )}
             {loggedIn && (
-              <button className="text-teal-800 hover:underline">&#9825; お気に入り追加</button>
+              <FavoriteControls productId={product.id} initialIsFavorite={isFavorite} />
             )}
           </div>
         </div>

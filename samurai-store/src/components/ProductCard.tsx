@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/hooks/useCart';
-
+import FavoriteControls from '@/app/products/[id]/FavoriteControls';
 // 商品カードコンポーネントに渡すデータ（props）の型定義
 export interface ProductCardProps {
     id: string; // 商品ID
@@ -17,6 +17,10 @@ export interface ProductCardProps {
     reviewCount?: number; // 総レビュー数
 
     showCartButton?: boolean; // 「カートへ」の有無
+
+    showFavoriteButton?: boolean; // 「お気に入り」の有無
+    initialIsFavorite?: boolean; // 初期のお気に入り状態
+
     className?: string; // 外部からのスタイル調整用
 }
 
@@ -30,6 +34,8 @@ export default function ProductCard({
     rating,
     reviewCount,
     showCartButton = false,
+    showFavoriteButton = false,
+    initialIsFavorite = false,
     className = ''
 }: ProductCardProps) {
     // カート管理用の関数を取得
@@ -84,18 +90,33 @@ export default function ProductCard({
                     )
                 )}
                 <div className="flex justify-between items-center w-full mt-2">
-                    <p className="text-lg font-bold">¥{price.toLocaleString()}</p>
-                    {showCartButton && (
-                        <button
-                            onClick={!inCart ? handleCart : undefined}
-                            disabled={inCart}
-                            className={`border py-2 px-4 rounded-sm
-                ${inCart ? 'bg-indigo-500 text-white' : 'border-indigo-500 text-indigo-500 hover:bg-indigo-400 hover:text-white'}
-              `}
-                        >
-                            {inCart ? '追加済み' : 'カートへ'}
-                        </button>
-                    )}
+                    <p className="text-lg font-bold">
+                        ¥{price.toLocaleString()}
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                        {showFavoriteButton && (
+                            <FavoriteControls
+                                productId={Number(id)}
+                                initialIsFavorite={initialIsFavorite}
+                            />
+                        )}
+
+                        {showCartButton && (
+                            <button
+                                onClick={!inCart ? handleCart : undefined}
+                                disabled={inCart}
+                                className={`border py-2 px-4 rounded-sm
+                    ${inCart
+                                        ? 'bg-indigo-500 text-white'
+                                        : 'border-indigo-500 text-indigo-500 hover:bg-indigo-400 hover:text-white'
+                                    }
+                `}
+                            >
+                                {inCart ? '追加済み' : 'カートへ'}
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
